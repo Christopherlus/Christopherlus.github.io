@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fellowship Trajectories</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    
+    <style>
+        /* CSS RESET & VARIABLES */
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e1e4e8;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        /* LAYOUT CONTAINER */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        /* HEADER */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-weight: 700;
+            font-size: 2.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            color: #666;
+            margin-top: 8px;
+            font-weight: 300;
+            font-size: 1.1rem;
+        }
+
+        /* CONTROLS AREA */
+        .controls-wrapper {
+            background-color: #fafbfc;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap; /* Responsive wrapping */
+            gap: 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            color: #7f8c8d;
+        }
+
+        select {
+            padding: 10px 12px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        select:hover {
+            border-color: var(--accent-color);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        /* STATS BOX */
+        .stats-box {
+            background: linear-gradient(135deg, #eef2f3 0%, #ffffff 100%);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            color: #444;
+            box-shadow: var(--shadow);
+            white-space: pre-wrap;
+        }
+
+        /* CHART AREA */
+        #sankey-diagram {
+            width: 100%;
+            height: 700px; /* Taller for better visibility */
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* FOOTER */
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #95a5a6;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        /* RESPONSIVE TWEAKS */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .controls-wrapper {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 20px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            #sankey-diagram {
+                height: 500px; /* Smaller height on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Fellowship Trajectories</h1>
+        <p class="subtitle">Interactive visualization of career paths and program history</p>
+    </header>
+    
+    <div class="controls-wrapper">
+        <div class="control-group">
+            <label for="yearFilter">Start Year</label>
+            <select id="yearFilter">
+                <option value="All">All Years</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="programFilter">Target Fellowship</label>
+            <select id="programFilter">
+                <option value="All">All Fellowships</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="stats-output" class="stats-box">Initializing analytics...</div>
+
+    <div id="sankey-diagram"></div>
+    
+    <div class="footer">
+        Generated Analysis | Data Confidential
+    </div>
+</div>
+
+<script>
+    // --- 1. DATA SOURCE ---
+    const rawText = `
+Apart	2025
+Apart	2024
+Apart	2025
+Apart	2024
+Apart	2025
+Apart	2025	LASR	Apart
+Apart	2025
+PIBBS	2025
+PIBBS	2025
+PIBBS	2024
+PIBBS	2022
+PIBBS	2023	MATS	AI Safety Camp	PIBBS
+PIBBS	2023	PIBBS	AI Futures Fellowship
+Pivotal	2025
+Pivotal	2024	Pivotal	Tarbell
+Pivotal	2025
+Pivotal	2025
+Pivotal	2025
+Pivotal	2025	Non-Trivial	Pivotal
+Pivotal	2025
+Pivotal	2025	MARS	ARENA	Pivotal
+Pivotal	2025
+Pivotal	2025
+Pivotal	2025
+Pivotal	2025
+Pivotal	2022
+Pivotal	2021
+Pivotal	2021
+Pivotal	2024
+Pivotal	2023
+Pivotal	2021
+Pivotal	2024
+Pivotal	2022
+Pivotal	2025	Non-Trivial	Apart	Pivotal
+Pivotal	2024	Pivotal	GovAI
+Pivotal	2024	Pivotal	MATS
+Pivotal	2024	Pivotal	MATS
+Pivotal	2024	Pivotal	Talos
+Pivotal	2022	Pivotal	IAPS
+Pivotal	2022	Pivotal	Talos
+Pivotal	2025	Pivotal	IAPS
+Pivotal	2021
+Pivotal	2021
+Pivotal	2023
+Pivotal	2023
+Pivotal	2024
+Pivotal	2022	Pivotal
+Pivotal	2025
+Pivotal	2025
+Pivotal	2022	Pivotal	MATS
+Pivotal	2024
+Pivotal	2022
+Pivotal	2025
+Pivotal	2025
+Pivotal	2023
+Pivotal	2023
+Pivotal	2023
+Pivotal	2023
+Pivotal	2022
+Pivotal	2025	FIG	Pivotal
+Pivotal	2022	ERA	Pivotal
+Pivotal	2025
+Pivotal	2024
+Pivotal	2021
+Pivotal	2021
+Pivotal	2022
+Pivotal	2022
+Pivotal	2024
+Pivotal	2022
+Pivotal	2023
+Pivotal	2023
+Pivotal	2025	ARENA	Pivotal
+Pivotal	2025
+Pivotal	2024	MARS	SPAR	Pivotal	FIG
+Pivotal	2025
+Pivotal	2025
+Pivotal	2024
+Pivotal	2023	MATS	Pivotal
+Pivotal	2023
+Pivotal	2022
+Pivotal	2024
+Talos	2025
+Talos	2024	SPAR	Talos
+Talos	2024
+Talos	2025	Pivotal	Talos	MATS
+Talos	2024
+Talos	2024
+Talos	2025	ARENA	Talos
+Talos	2024
+Talos	2024	Pivotal	Talos
+Talos	2025
+Talos	2024
+Talos	2024
+Talos	2025
+Talos	2025
+Talos	2025	Talos	GovAI
+Talos	2024
+Talos	2024
+Talos	2024	Pivotal	Talos
+Talos	2022
+Talos	2024
+Talos	2024	Talos	FIG
+Talos	2024	Talos	FIG
+Talos	2024
+Talos	2025
+Talos	2024
+Talos	2024
+Talos	2024	AI Safety Camp	Talos	IAPS
+`;
+
+    // Global variable to hold parsed data
+    let parsedRows = [];
+
+    // --- 2. LOGIC: PARSING ---
+    function parseData() {
+        const lines = rawText.trim().split('\n');
+        const rows = [];
+
+        lines.forEach(line => {
+            if (!line.trim()) return;
+
+            // Split by regex (Tab OR 2+ Spaces)
+            const parts = line.trim().split(/\t|\s{2,}/).map(p => p.trim());
+
+            if (parts.length < 2) return;
+
+            const targetProgram = parts[0];
+            const year = parts[1]; 
+
+            // Get history (columns 2 onwards)
+            const historyColumns = parts.slice(2);
+            
+            let path = historyColumns.filter(p => p !== "");
+
+            // If no history, path is just target program
+            if (path.length === 0) {
+                path = [targetProgram];
+            }
+
+            rows.push({
+                targetProgram,
+                year,
+                path
+            });
+        });
+        return rows;
+    }
+
+    // --- 3. LOGIC: DROPDOWNS ---
+    function populateFilters(rows) {
+        const uniqueYears = [...new Set(rows.map(r => r.year))].sort().reverse();
+        const uniquePrograms = [...new Set(rows.map(r => r.targetProgram))].sort();
+
+        const yearSelect = document.getElementById('yearFilter');
+        uniqueYears.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelect.appendChild(option);
+        });
+
+        const progSelect = document.getElementById('programFilter');
+        uniquePrograms.forEach(prog => {
+            const option = document.createElement('option');
+            option.value = prog;
+            option.textContent = prog;
+            progSelect.appendChild(option);
+        });
+
+        // Add Listeners
+        yearSelect.addEventListener('change', updateChart);
+        progSelect.addEventListener('change', updateChart);
+    }
+
+    // --- 4. LOGIC: CHART & STATS ---
+    function updateChart() {
+        const yearSelect = document.getElementById('yearFilter').value;
+        const progSelect = document.getElementById('programFilter').value;
+
+        // A. Filter Data
+        const filteredData = parsedRows.filter(row => {
+            const matchesYear = (yearSelect === 'All') || (row.year === yearSelect);
+            const matchesProg = (progSelect === 'All') || (row.targetProgram === progSelect);
+            return matchesYear && matchesProg;
+        });
+
+        // B. Calculate Stats & Links
+        const linkCounts = new Map();
+        let totalProcessed = 0;
+        let hasPrior = 0;
+        let hasSubsequent = 0;
+
+        filteredData.forEach(row => {
+            totalProcessed++;
+            const path = row.path;
+            const target = row.targetProgram;
+
+            // Stats
+            if (path.includes(target)) {
+                const idx = path.indexOf(target);
+                if (idx > 0) hasPrior++;
+                if (idx < path.length - 1) hasSubsequent++;
+            }
+
+            // Links
+            const fullPath = ['Start', ...path, 'End'];
+            for (let i = 0; i < fullPath.length - 1; i++) {
+                const source = fullPath[i];
+                const targetNode = fullPath[i+1];
+                const key = `${source}|${targetNode}`; 
+                linkCounts.set(key, (linkCounts.get(key) || 0) + 1);
+            }
+        });
+
+        // C. Update Stats UI
+        if (totalProcessed > 0) {
+            const priorPct = ((hasPrior / totalProcessed) * 100).toFixed(1);
+            const subPct = ((hasSubsequent / totalProcessed) * 100).toFixed(1);
+            
+            const statsText = 
+`Total Profiles Analyzed: ${totalProcessed}
+• Experience BEFORE target fellowship: ${priorPct}% (${hasPrior})
+• Experience AFTER target fellowship:  ${subPct}% (${hasSubsequent})`;
+            
+            document.getElementById('stats-output').innerText = statsText;
+        } else {
+            document.getElementById('stats-output').innerText = "No matching profiles found for this selection.";
+        }
+
+        // D. Prepare Plotly Data
+        const uniqueNodes = new Set();
+        linkCounts.forEach((value, key) => {
+            const [source, target] = key.split('|');
+            uniqueNodes.add(source);
+            uniqueNodes.add(target);
+        });
+        
+        const allNodes = Array.from(uniqueNodes);
+        const nodeMap = new Map();
+        allNodes.forEach((node, index) => nodeMap.set(node, index));
+
+        const sourceIndices = [];
+        const targetIndices = [];
+        const values = [];
+
+        linkCounts.forEach((count, key) => {
+            const [sourceName, targetName] = key.split('|');
+            sourceIndices.push(nodeMap.get(sourceName));
+            targetIndices.push(nodeMap.get(targetName));
+            values.push(count);
+        });
+
+        const dataTrace = {
+            type: "sankey",
+            orientation: "h",
+            node: {
+                pad: 20,
+                thickness: 20,
+                line: { color: "rgba(0,0,0,0.1)", width: 0.5 },
+                label: allNodes,
+                // Professional color palette for nodes
+                color: allNodes.map(n => n === "Start" || n === "End" ? "#95a5a6" : "#3498db")
+            },
+            link: {
+                source: sourceIndices,
+                target: targetIndices,
+                value: values,
+                // Semi-transparent grey links for cleaner look
+                color: "rgba(189, 195, 199, 0.4)" 
+            }
+        };
+
+        const layout = {
+            title: {
+                text: 'Trajectory Flow',
+                font: { family: 'Roboto', size: 18, color: '#2c3e50' }
+            },
+            font: { family: 'Roboto', size: 12 },
+            autosize: true,
+            margin: { l: 20, r: 20, t: 40, b: 20 },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)'
+        };
+
+        const config = {
+            responsive: true,
+            displayModeBar: false // Hides the hovering toolbar for a cleaner look
+        };
+
+        Plotly.react('sankey-diagram', [dataTrace], layout, config);
+    }
+
+    // --- 5. INIT ---
+    document.addEventListener("DOMContentLoaded", () => {
+        parsedRows = parseData(); 
+        populateFilters(parsedRows); 
+        updateChart(); 
+    });
+
+</script>
+
+</body>
+</html>
