@@ -456,18 +456,18 @@ Talos	2024	AI Safety Camp	Talos	IAPS
             type: "sankey",
             orientation: "h",
             node: {
-                pad: 20,
+                pad: 30, // Increased padding to separate nodes vertically
                 thickness: 20,
                 line: { color: "rgba(0,0,0,0.1)", width: 0.5 },
                 label: allNodes,
-                // Professional color palette for nodes
-                color: allNodes.map(n => n === "Start" || n === "End" ? "#95a5a6" : "#3498db")
+                color: allNodes.map(n => n === "Start" || n === "End" ? "#95a5a6" : "#3498db"),
+                // CRITICAL FIX: "snap" prevents nodes from overlapping (clumping)
+                arrangement: "snap"
             },
             link: {
                 source: sourceIndices,
                 target: targetIndices,
                 value: values,
-                // Semi-transparent grey links for cleaner look
                 color: "rgba(189, 195, 199, 0.4)" 
             }
         };
@@ -486,7 +486,7 @@ Talos	2024	AI Safety Camp	Talos	IAPS
 
         const config = {
             responsive: true,
-            displayModeBar: false // Hides the hovering toolbar for a cleaner look
+            displayModeBar: false 
         };
 
         Plotly.react('sankey-diagram', [dataTrace], layout, config);
