@@ -71,7 +71,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-wrap: wrap; /* Responsive wrapping */
+            flex-wrap: wrap; 
             gap: 30px;
         }
 
@@ -128,9 +128,91 @@
         /* CHART AREA */
         #sankey-diagram {
             width: 100%;
-            height: 700px; /* Taller for better visibility */
+            height: 700px; 
             border-radius: 8px;
             overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        /* --- NEW TABLE STYLES --- */
+        .tables-section {
+            border-top: 2px solid var(--border-color);
+            padding-top: 30px;
+        }
+        
+        .section-header {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        .program-block {
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        .program-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent-color);
+            display: inline-block;
+        }
+
+        .tables-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .table-wrapper h3 {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        td.count-col {
+            width: 60px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .empty-msg {
+            color: #999;
+            font-style: italic;
+            padding: 10px 0;
+            font-size: 0.9rem;
         }
 
         /* FOOTER */
@@ -148,19 +230,19 @@
             .container {
                 padding: 20px;
             }
-            
             .controls-wrapper {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 20px;
             }
-
             h1 {
                 font-size: 1.8rem;
             }
-
             #sankey-diagram {
-                height: 500px; /* Smaller height on mobile */
+                height: 500px;
+            }
+            .tables-grid {
+                grid-template-columns: 1fr; /* Stack tables on mobile */
             }
         }
     </style>
@@ -192,6 +274,12 @@
 
     <div id="sankey-diagram"></div>
     
+    <div class="tables-section">
+        <h2 class="section-header">Flow Analysis Tables</h2>
+        <div id="tables-container">
+            </div>
+    </div>
+
     <div class="footer">
         Generated Analysis | Data Confidential
     </div>
@@ -200,114 +288,668 @@
 <script>
     // --- 1. DATA SOURCE ---
     const rawText = `
-Apart	2025
-Apart	2024
-Apart	2025
-Apart	2024
-Apart	2025
-Apart	2025	LASR	Apart
-Apart	2025
-PIBBS	2025
-PIBBS	2025
-PIBBS	2024
-PIBBS	2022
-PIBBS	2023	MATS	AI Safety Camp	PIBBS
-PIBBS	2023	PIBBS	AI Futures Fellowship
-Pivotal	2025
-Pivotal	2024	Pivotal	Tarbell
-Pivotal	2025
-Pivotal	2025
-Pivotal	2025
-Pivotal	2025	Non-Trivial	Pivotal
-Pivotal	2025
-Pivotal	2025	MARS	ARENA	Pivotal
-Pivotal	2025
-Pivotal	2025
-Pivotal	2025
-Pivotal	2025
-Pivotal	2022
-Pivotal	2021
-Pivotal	2021
-Pivotal	2024
-Pivotal	2023
-Pivotal	2021
-Pivotal	2024
-Pivotal	2022
-Pivotal	2025	Non-Trivial	Apart	Pivotal
-Pivotal	2024	Pivotal	GovAI
-Pivotal	2024	Pivotal	MATS
-Pivotal	2024	Pivotal	MATS
-Pivotal	2024	Pivotal	Talos
-Pivotal	2022	Pivotal	IAPS
-Pivotal	2022	Pivotal	Talos
-Pivotal	2025	Pivotal	IAPS
-Pivotal	2021
-Pivotal	2021
-Pivotal	2023
-Pivotal	2023
-Pivotal	2024
-Pivotal	2022	Pivotal
-Pivotal	2025
-Pivotal	2025
-Pivotal	2022	Pivotal	MATS
-Pivotal	2024
-Pivotal	2022
-Pivotal	2025
-Pivotal	2025
-Pivotal	2023
-Pivotal	2023
-Pivotal	2023
-Pivotal	2023
-Pivotal	2022
-Pivotal	2025	FIG	Pivotal
-Pivotal	2022	ERA	Pivotal
-Pivotal	2025
-Pivotal	2024
-Pivotal	2021
-Pivotal	2021
-Pivotal	2022
-Pivotal	2022
-Pivotal	2024
-Pivotal	2022
-Pivotal	2023
-Pivotal	2023
-Pivotal	2025	ARENA	Pivotal
-Pivotal	2025
+Apart	2025				
+Apart	2024				
+Apart	2025				
+Apart	2024				
+Apart	2025				
+Apart	2025	LASR	Apart		
+Apart	2025				
+Apart	2024	ARENA	Apart	AI Safety Camp	
+Apart	2025				
+Apart	2025				
+Apart	2025				
+Apart	2024				
+Apart	2025	Apart	MARS		
+Apart	2025	Apart	ARENA		
+Apart	2024	Apart			
+Apart	2025				
+Apart	2024				
+Apart	2024				
+Apart	2025				
+Apart	2024				
+Apart	2025				
+Apart	2025				
+Apart	2025				
+Apart	2024				
+Apart	2024				
+Apart	2024				
+Apart	2024	Non-Trivial	Apart	Pivotal	
+Apart	2024				
+Apart	2024				
+Apart	2024				
+Apart	2024				
+Apart	2024				
+Apart	2023				
+Apart	2024				
+Apart	2024				
+Apart	2024				
+Apart	2024	SPAR	Apart	FIG	
+Apart	2023	Apart	SPAR	MATS	
+Apart	2024	ARENA	AI Safety Camp	Apart	MATS
+Apart	2024	SPAR	Apart		
+Apart	2024				
+Apart	2023				
+Apart	2024				
+Apart	2024				
+Apart	2023	Apart	ARENA		
+Apart	2023	Apart	SPAR	AI Safety Camp	
+Apart	2024				
+Apart	2024				
+Apart	2024				
+Apart	2025				
+Apart	2025				
+Apart	2024				
+ERA	2021				
+ERA	2023				
+ERA	2025				
+ERA	2025				
+ERA	2025	Apart	ERA		
+ERA	2024				
+ERA	2023	ERA	GovAI		
+ERA	2023				
+ERA	2023				
+ERA	2023				
+ERA	2022				
+ERA	2023				
+ERA	2023				
+ERA	2022				
+ERA	2022				
+ERA	2023				
+ERA	2022				
+ERA	2023				
+ERA	2021				
+ERA	2023				
+ERA	2022				
+ERA	2022				
+ERA	2023	Non-Trivial	ERA		
+ERA	2023				
+ERA	2023				
+ERA	2023	ERA	SPAR		
+ERA	2022	ERA	LASR	GovAI	
+ERA	2023				
+ERA	2022	ERA	Pivotal		
+ERA	2022				
+ERA	2022	MATS	ERA		
+ERA	2023				
+ERA	2022				
+ERA	2022				
+ERA	2021				
+ERA	2023				
+ERA	2023				
+ERA	2024	AI Safety Camp	ERA		
+ERA	2022				
+ERA	2023	ERA	GovAI		
+ERA	2021				
+ERA	2025				
+ERA	2025				
+ERA	2025	ERA	SPAR	GovAI	
+ERA	2025				
+ERA	2025				
+ERA	2025	Non-Trivial	FIG	ERA	
+ERA	2025	ERA	GovAI		
+ERA	2025				
+ERA	2025				
+ERA	2025				
+ERA	2025				
+ERA	2025				
+ERA	2025				
+ERA	2025	SPAR	ERA		
+ERA	2025	FIG	ERA		
+ERA	2023				
+ERA	2025				
+ERA	2025				
+ERA	2025				
+ERA	2025	GovAI	ERA		
+ERA	2025				
+ERA	2025				
+ERA	2025				
+ERA	2023				
+ERA	2024				
+ERA	2024	ERA	GovAI		
+ERA	2024	ERA	GovAI		
+ERA	2024	ERA	MATS		
+ERA	2024	ERA	MATS		
+ERA	2022	ERA	MATS		
+ERA	2024	ERA	GovAI	Talos	
+ERA	2024	ERA	Talos		
+ERA	2022				
+ERA	2021	ERA	MATS		
+ERA	2024				
+ERA	2024				
+ERA	2024				
+ERA	2025				
+ERA	2024	ERA	GovAI		
+ERA	2024				
+ERA	2024				
+ERA	2024				
+ERA	2025				
+ERA	2024				
+ERA	2024	ERA	Pivotal		
+GovAI	2023	GovAI	IAPS		
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025	ERA	GovAI		
+GovAI	2025	ERA	GovAI		
+GovAI	2025	FIG	GovAI		
+GovAI	2025				
+GovAI	2025				
+GovAI	2025	Pivotal	GovAI		
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025	SPAR	ARENA	GovAI	IAPS
+GovAI	2025	ERA	GovAI		
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025	GovAI	IAPS		
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025	SPAR	GovAI		
+GovAI	2025				
+GovAI	2025	Talos	GovAI		
+GovAI	2022				
+GovAI	2023				
+GovAI	2024				
+GovAI	2024				
+GovAI	2024	Pivotal	GovAI		
+GovAI	2023				
+GovAI	2024	GovAI	FIG		
+GovAI	2025	GovAI	ERA		
+GovAI	2024				
+GovAI	2025	ERA	GovAI	Talos	
+GovAI	2022	MATS	GovAI		
+GovAI	2025				
+GovAI	2024				
+GovAI	2024				
+GovAI	2024	GovAI	IAPS		
+GovAI	2023				
+GovAI	2025				
+GovAI	2020				
+GovAI	2024	GovAI			
+GovAI	2020				
+GovAI	2024	GovAI	Pivotal		
+GovAI	2024				
+GovAI	2024				
+GovAI	2024				
+GovAI	2025				
+GovAI	2024				
+GovAI	2025				
+GovAI	2024				
+GovAI	2025				
+GovAI	2024				
+GovAI	2023				
+GovAI	2025	FIG	GovAI	IAPS	
+GovAI	2022				
+GovAI	2024				
+GovAI	2023				
+GovAI	2025	ERA	GovAI		
+GovAI	2025				
+GovAI	2023	ERA	GovAI		
+GovAI	2022				
+GovAI	2022				
+GovAI	2023				
+GovAI	2023	GovAI	Asterisk		
+GovAI	2025				
+GovAI	2024				
+GovAI	2023				
+GovAI	2022				
+GovAI	2025	GovAI	FIG		
+GovAI	2022				
+GovAI	2023				
+GovAI	2023				
+GovAI	2025				
+GovAI	2024				
+GovAI	2023				
+GovAI	2025				
+GovAI	2024				
+GovAI	2022				
+GovAI	2024				
+GovAI	2023				
+GovAI	2024				
+GovAI	2024				
+GovAI	2022				
+GovAI	2024				
+GovAI	2025				
+GovAI	2023				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2020				
+GovAI	2023				
+GovAI	2023				
+GovAI	2025	ERA	GovAI		
+GovAI	2024				
+GovAI	2022				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025				
+GovAI	2025	GovAI	IAPS		
+IAPS	2024				
+IAPS	2024	GovAI	IAPS		
+IAPS	2024				
+IAPS	2024				
+IAPS	2024				
+IAPS	2024				
+IAPS	2024				
+IAPS	2024				
+IAPS	2024	Astra	IAPS		
+IAPS	2024	GovAI	IAPS		
+IAPS	2024				
+IAPS	2024	Pivotal	IAPS		
+MATS	2025				
+MATS	2024				
+MATS	2024				
+MATS	2025				
+MATS	2023				
+MATS	2025	MATS	Anthropic Fellow		
+MATS	2024				
+MATS	2024				
+MATS	2025				
+MATS	2025				
+MATS	2023				
+MATS	2025				
+MATS	2025	ERA	MATS		
+MATS	2025	Pivotal	MATS		
+MATS	2025				
+MATS	2022				
+MATS	2025	SPAR	MATS		
+MATS	2025				
+MATS	2025	Pivotal	MATS	Talos	
+MATS	2025				
+MATS	2024				
+MATS	2025				
+MATS	2025				
+MATS	2025	SPAR	MATS		
+MATS	2025	SPAR	MATS		
+MATS	2025	x			
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025	ARENA	MATS		
+MATS	2024				
+MATS	2025	ARENA	MATS		
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025	SPAR	MATS		
+MATS	2025				
+MATS	2025	ERA	MATS		
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025	MARS	MATS		
+MATS	2025	SPAR	FIG	MATS	
+MATS	2025				
+MATS	2025				
+MATS	2025	SPAR	MATS		
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025	AI Safety Camp	SPAR	MATS	
+MATS	2025	SPAR	MATS	IAPS	
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025				
+MATS	2025	MATS	SPAR		
+MATS	2024				
+MATS	2025				
+MATS	2025	SPAR	MATS		
+MATS	2024				
+MATS	2024				
+MATS	2023				
+MATS	2025				
+MATS	2022				
+MATS	2025				
+MATS	2025				
+MATS	2024				
+MATS	2023				
+MATS	2024	MATS	PIBBS		
+MATS	2024				
+MATS	2023				
+MATS	2024	ARENA	MATS		
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2025	ARENA	MATS		
+MATS	2022				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2024	FIG	MATS	IAPS	
+MATS	2025	MATS	Tarbell		
+MATS	2024				
+MATS	2025				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2022				
+MATS	2023				
+MATS	2023				
+MATS	2024				
+MATS	2024	AI Safety Camp	MATS		
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2023				
+MATS	2024				
+MATS	2024				
+MATS	2023	MATS	ARENA		
+MATS	2024				
+MATS	2024				
+MATS	2025				
+MATS	2023				
+MATS	2024				
+MATS	2025				
+MATS	2024				
+MATS	2024	ARENA	AI Safety Camp	Apart	MATS
+MATS	2023	MLAB	MATS		
+MATS	2023	AI Safety Camp	MATS		
+MATS	2024	AI Safety Camp	ARENA	MATS	
+MATS	2024				
+MATS	2023				
+MATS	2025				
+MATS	2023				
+MATS	2023				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2022				
+MATS	2024				
+MATS	2024	AI Safety Camp	MATS		
+MATS	2022				
+MATS	2024				
+MATS	2023				
+MATS	2024				
+MATS	2024				
+MATS	2023				
+MATS	2024				
+MATS	2024	Apart	SPAR	MATS	
+MATS	2024				
+MATS	2024				
+MATS	2024	MATS	AI Safety Camp		
+MATS	2024				
+MATS	2024				
+MATS	2023				
+MATS	2025	LASR	MATS		
+MATS	2024	MATS			
+MATS	2025				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2023				
+MATS	2025				
+MATS	2024				
+MATS	2024				
+MATS	2023				
+MATS	2023				
+MATS	2023	AI Safety Camp	MATS		
+MATS	2023				
+MATS	2025	LASR	MATS		
+MATS	2024				
+MATS	2023				
+MATS	2024				
+MATS	2023				
+MATS	2024	AI Safety Camp	MATS	Apart	
+MATS	2024				
+MATS	2023	MATS	PIBBS		
+MATS	2024				
+MATS	2025				
+MATS	2024				
+MATS	2023				
+MATS	2023				
+MATS	2023				
+MATS	2024				
+MATS	2023				
+MATS	2024	SPAR	MATS		
+MATS	2024				
+MATS	2023				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2023	MATS	PIBBS		
+MATS	2024				
+MATS	2025	MARS	MATS		
+MATS	2023				
+MATS	2024				
+MATS	2022				
+MATS	2023				
+MATS	2024				
+MATS	2023	MATS	AI Safety Camp	SPAR	
+MATS	2022				
+MATS	2022	MATS	AI Safety Camp		
+MATS	2022				
+MATS	2025				
+MATS	2025				
+MATS	2024				
+MATS	2024				
+MATS	2024				
+MATS	2025				
+MATS	2022				
+MATS	2024	SPAR	ARENA	MATS	
+MATS	2025				
+MATS	2024				
+MATS	2022				
+MATS	2025				
+MATS	2023	MATS	SPAR	IAPS	
+MATS	2023				
+PIBBS	2025	MATS	PIBBS		
+PIBBS	2025				
+PIBBS	2025				
+PIBBS	2023				
+PIBBS	2023				
+PIBBS	2023	MATS	PIBBS		
+PIBBS	2023				
+PIBBS	2023	PIBBS	Apart		
+PIBBS	2024				
+PIBBS	2024				
+PIBBS	2023				
+PIBBS	2023				
+PIBBS	2024	MATS	PIBBS		
+PIBBS	2022				
+PIBBS	2024	PIBBS	SPAR		
+PIBBS	2022				
+PIBBS	2022				
+PIBBS	2023				
+PIBBS	2022				
+PIBBS	2024				
+PIBBS	2025				
+PIBBS	2025				
+PIBBS	2025	IRG	PIBBS		
+PIBBS	2025				
+PIBBS	2025				
+PIBBS	2025				
+PIBBS	2025				
+PIBBS	2024				
+PIBBS	2022				
+PIBBS	2023	MATS	AI Safety Camp	PIBBS	
+PIBBS	2023	PIBBS	AI Futures Fellowship		
+Pivotal	2025				
+Pivotal	2024	Pivotal	Tarbell		
+Pivotal	2025				
+Pivotal	2025				
+Pivotal	2025				
+Pivotal	2025	Non-Trivial	Pivotal		
+Pivotal	2025				
+Pivotal	2025	MARS	ARENA	Pivotal	
+Pivotal	2025				
+Pivotal	2025				
+Pivotal	2025				
+Pivotal	2025				
+Pivotal	2022				
+Pivotal	2021				
+Pivotal	2021				
+Pivotal	2024				
+Pivotal	2023				
+Pivotal	2021				
+Pivotal	2024				
+Pivotal	2022				
+Pivotal	2025	Non-Trivial	Apart	Pivotal	
+Pivotal	2024	Pivotal	GovAI		
+Pivotal	2024	Pivotal	MATS		
+Pivotal	2024	Pivotal	MATS		
+Pivotal	2024	Pivotal	Talos		
+Pivotal	2022	Pivotal	IAPS		
+Pivotal	2022	Pivotal	Talos		
+Pivotal	2025	Pivotal	IAPS		
+Pivotal	2021				
+Pivotal	2021				
+Pivotal	2023				
+Pivotal	2023				
+Pivotal	2024				
+Pivotal	2022	Pivotal			
+Pivotal	2025				
+Pivotal	2025				
+Pivotal	2022	Pivotal	MATS		
+Pivotal	2024				
+Pivotal	2022				
+Pivotal	2025				
+Pivotal	2025				
+Pivotal	2023				
+Pivotal	2023				
+Pivotal	2023				
+Pivotal	2023				
+Pivotal	2022				
+Pivotal	2025	FIG	Pivotal		
+Pivotal	2022	ERA	Pivotal		
+Pivotal	2025				
+Pivotal	2024				
+Pivotal	2021				
+Pivotal	2021				
+Pivotal	2022				
+Pivotal	2022				
+Pivotal	2024				
+Pivotal	2022				
+Pivotal	2023				
+Pivotal	2023				
+Pivotal	2025	ARENA	Pivotal		
+Pivotal	2025				
 Pivotal	2024	MARS	SPAR	Pivotal	FIG
-Pivotal	2025
-Pivotal	2025
-Pivotal	2024
-Pivotal	2023	MATS	Pivotal
-Pivotal	2023
-Pivotal	2022
-Pivotal	2024
-Talos	2025
-Talos	2024	SPAR	Talos
-Talos	2024
-Talos	2025	Pivotal	Talos	MATS
-Talos	2024
-Talos	2024
-Talos	2025	ARENA	Talos
-Talos	2024
-Talos	2024	Pivotal	Talos
-Talos	2025
-Talos	2024
-Talos	2024
-Talos	2025
-Talos	2025
-Talos	2025	Talos	GovAI
-Talos	2024
-Talos	2024
-Talos	2024	Pivotal	Talos
-Talos	2022
-Talos	2024
-Talos	2024	Talos	FIG
-Talos	2024	Talos	FIG
-Talos	2024
-Talos	2025
-Talos	2024
-Talos	2024
-Talos	2024	AI Safety Camp	Talos	IAPS
+Pivotal	2025				
+Pivotal	2025				
+Pivotal	2024				
+Pivotal	2023	MATS	Pivotal		
+Pivotal	2023				
+Pivotal	2022				
+Pivotal	2024				
+Talos	2025				
+Talos	2024	SPAR	Talos		
+Talos	2024				
+Talos	2025	Pivotal	Talos	MATS	
+Talos	2024				
+Talos	2024				
+Talos	2025	ARENA	Talos		
+Talos	2024				
+Talos	2024	Pivotal	Talos		
+Talos	2025				
+Talos	2024				
+Talos	2024				
+Talos	2025				
+Talos	2025				
+Talos	2025	Talos	GovAI		
+Talos	2024				
+Talos	2024				
+Talos	2024	Pivotal	Talos		
+Talos	2022				
+Talos	2024				
+Talos	2024	Talos	FIG		
+Talos	2024	Talos	FIG		
+Talos	2024				
+Talos	2025				
+Talos	2024				
+Talos	2024				
+Talos	2024	AI Safety Camp	Talos	IAPS	
+Talos	2024				
+Talos	2024				
+Talos	2025				
+Talos	2025				
+Talos	2023				
+Talos	2024				
+Talos	2025				
+Talos	2022				
+Talos	2024				
+Talos	2024	MATS	Talos		
+Talos	2024	ERA	AIM	Talos	Mila Fellowship
+Talos	2025				
+Talos	2023				
+Talos	2024				
+Talos	2024				
+Talos	2025				
+Talos	2025	ERA	Talos		
+Talos	2025	AI Safety Camp	Talos		
+Talos	2022				
+Talos	2023				
+Talos	2023				
+Talos	2024				
+Talos	2024				
+Talos	2023	Talos	Pivotal		
+Talos	2024	Talos	GovAI	IAPS	
+Talos	2025	Talos	IAPS		
+Talos	2022	Talos	GovAI		
+Talos	2024				
+Talos	2024				
+Talos	2025	MATS	Talos		
+Talos	2024				
+Talos	2024				
+Talos	2024				
+Talos	2023	Talos	MATS		
+Talos	2025	Talos	GovAI	LawAI	
+Tarbell	2024				
+Tarbell	2025				
+Tarbell	2025	MATS	Tarbell		
+Tarbell	2025				
+Tarbell	2025				
+Tarbell	2025				
+Tarbell	2025				
+Tarbell	2025				
+Tarbell	2025				
+Tarbell	2024				
+Tarbell	2023				
+Tarbell	2023				
+Tarbell	2023				
+Tarbell	2023				
+Tarbell	2025				
 `;
 
     // Global variable to hold parsed data
@@ -370,12 +1012,12 @@ Talos	2024	AI Safety Camp	Talos	IAPS
         });
 
         // Add Listeners
-        yearSelect.addEventListener('change', updateChart);
-        progSelect.addEventListener('change', updateChart);
+        yearSelect.addEventListener('change', updateAnalysis);
+        progSelect.addEventListener('change', updateAnalysis);
     }
 
-    // --- 4. LOGIC: CHART & STATS ---
-    function updateChart() {
+    // --- 4. LOGIC: CHART, STATS & TABLES ---
+    function updateAnalysis() {
         const yearSelect = document.getElementById('yearFilter').value;
         const progSelect = document.getElementById('programFilter').value;
 
@@ -386,7 +1028,13 @@ Talos	2024	AI Safety Camp	Talos	IAPS
             return matchesYear && matchesProg;
         });
 
-        // B. Calculate Stats & Links
+        // Update visuals
+        updateStatsAndChart(filteredData);
+        generateTables(filteredData);
+    }
+
+    function updateStatsAndChart(filteredData) {
+        // B. Calculate Stats & Links for Chart
         const linkCounts = new Map();
         let totalProcessed = 0;
         let hasPrior = 0;
@@ -456,12 +1104,11 @@ Talos	2024	AI Safety Camp	Talos	IAPS
             type: "sankey",
             orientation: "h",
             node: {
-                pad: 30, // Increased padding to separate nodes vertically
+                pad: 30,
                 thickness: 20,
                 line: { color: "rgba(0,0,0,0.1)", width: 0.5 },
                 label: allNodes,
                 color: allNodes.map(n => n === "Start" || n === "End" ? "#95a5a6" : "#3498db"),
-                // CRITICAL FIX: "snap" prevents nodes from overlapping (clumping)
                 arrangement: "snap"
             },
             link: {
@@ -492,11 +1139,101 @@ Talos	2024	AI Safety Camp	Talos	IAPS
         Plotly.react('sankey-diagram', [dataTrace], layout, config);
     }
 
-    // --- 5. INIT ---
+    // --- 5. LOGIC: TABLES GENERATION ---
+    function generateTables(data) {
+        const container = document.getElementById('tables-container');
+        container.innerHTML = ''; // Clear previous content
+
+        // 1. Identify all unique target programs in the filtered data
+        const uniqueTargets = [...new Set(data.map(r => r.targetProgram))].sort();
+
+        if (uniqueTargets.length === 0) {
+            container.innerHTML = '<div class="empty-msg">No data available for tables.</div>';
+            return;
+        }
+
+        // 2. Loop through each target program to create a section
+        uniqueTargets.forEach(targetProg => {
+            const progRows = data.filter(r => r.targetProgram === targetProg);
+            
+            // Count Before and After
+            const beforeCounts = {};
+            const afterCounts = {};
+
+            progRows.forEach(row => {
+                const path = row.path;
+                // Find index of target in path. If multiple, we use the first occurrence
+                // (or you could adapt logic to be stricter)
+                const targetIdx = path.indexOf(targetProg);
+
+                if (targetIdx !== -1) {
+                    // BEFORE
+                    const beforeArr = path.slice(0, targetIdx);
+                    beforeArr.forEach(prog => {
+                        beforeCounts[prog] = (beforeCounts[prog] || 0) + 1;
+                    });
+
+                    // AFTER
+                    const afterArr = path.slice(targetIdx + 1);
+                    afterArr.forEach(prog => {
+                        afterCounts[prog] = (afterCounts[prog] || 0) + 1;
+                    });
+                }
+            });
+
+            // Helper to sort and convert counts object to array
+            const getSorted = (countsObj) => {
+                return Object.entries(countsObj)
+                    .sort((a, b) => b[1] - a[1]); // Descending sort by count
+            };
+
+            const sortedBefore = getSorted(beforeCounts);
+            const sortedAfter = getSorted(afterCounts);
+
+            // 3. Construct HTML for this program
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'program-block';
+
+            // Title
+            const title = document.createElement('div');
+            title.className = 'program-title';
+            title.innerText = targetProg;
+            sectionDiv.appendChild(title);
+
+            // Grid
+            const grid = document.createElement('div');
+            grid.className = 'tables-grid';
+
+            // Table Generator Helper
+            const createTableHtml = (title, dataArr) => {
+                let html = `<div class="table-wrapper"><h3>${title}</h3>`;
+                if (dataArr.length === 0) {
+                    html += `<div class="empty-msg">None recorded</div>`;
+                } else {
+                    html += `<table><thead><tr><th>Fellowship</th><th class="count-col">Count</th></tr></thead><tbody>`;
+                    dataArr.forEach(([name, count]) => {
+                        html += `<tr><td>${name}</td><td class="count-col">${count}</td></tr>`;
+                    });
+                    html += `</tbody></table>`;
+                }
+                html += `</div>`;
+                return html;
+            };
+
+            grid.innerHTML = 
+                createTableHtml(`Before ${targetProg}`, sortedBefore) +
+                createTableHtml(`After ${targetProg}`, sortedAfter);
+
+            sectionDiv.appendChild(grid);
+            container.appendChild(sectionDiv);
+        });
+    }
+
+    // --- 6. INIT ---
     document.addEventListener("DOMContentLoaded", () => {
         parsedRows = parseData(); 
         populateFilters(parsedRows); 
-        updateChart(); 
+        updateAnalysis(); // Initial Draw
     });
 
 </script>
