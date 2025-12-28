@@ -145,15 +145,58 @@
             border-radius: 8px;
             overflow: hidden;
             margin-bottom: 40px;
-            /* Added min-height to prevent collapse during redraw */
             min-height: 700px;
         }
 
-        /* --- NEW TABLE STYLES --- */
+        /* --- STRONGEST LINKS SECTION --- */
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .link-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .link-names {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .link-arrow {
+            color: #bdc3c7;
+            font-size: 1.1rem;
+        }
+
+        .link-stat {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+        
+        .link-stat strong {
+            color: var(--accent-color);
+            font-size: 1.1rem;
+        }
+
+        /* --- TABLES STYLES --- */
         .tables-section {
             border-top: 2px solid var(--border-color);
             padding-top: 30px;
-            margin-bottom: 40px;
         }
         
         .section-header {
@@ -295,14 +338,17 @@
 
     <div id="sankey-diagram"></div>
     
+    <h2 class="section-header" style="margin-top: 40px;">Strongest Connections (Bidirectional)</h2>
+    <p class="subtitle" style="text-align: center; margin-bottom: 20px; font-size: 0.9rem;">
+        Top 10 pairings with highest movement (Sum of A→B and B→A)
+    </p>
+    <div id="strongest-links-container" class="links-grid">
+        </div>
+    
     <div class="tables-section">
         <h2 class="section-header">Flow Analysis Tables</h2>
-        <div id="tables-container"></div>
-    </div>
-
-    <div class="tables-section">
-        <h2 class="section-header">Strongest Cross-Program Links</h2>
-        <div id="strongest-links-container"></div>
+        <div id="tables-container">
+            </div>
     </div>
 
     <div class="footer">
@@ -1052,24 +1098,17 @@ Tarbell	2024
         const yearSelect = document.getElementById('yearFilter').value;
         const progSelect = document.getElementById('programFilter').value;
 
-        // A. Filter Data for "Strict" Views (Chart, Flow Tables)
-        // This preserves the behavior of "Show me people whose Target was X"
-        const yearFilteredData = parsedRows.filter(row => {
-            return (yearSelect === 'All') || (row.year === yearSelect);
-        });
-
-        const fullyFilteredData = yearFilteredData.filter(row => {
-            return (progSelect === 'All') || (row.targetProgram === progSelect);
+        // A. Filter Data
+        const filteredData = parsedRows.filter(row => {
+            const matchesYear = (yearSelect === 'All') || (row.year === yearSelect);
+            const matchesProg = (progSelect === 'All') || (row.targetProgram === progSelect);
+            return matchesYear && matchesProg;
         });
 
         // Update visuals
-        updateStatsAndChart(fullyFilteredData);
-        generateTables(fullyFilteredData);
-
-        // B. Update Strongest Links (More Inclusive)
-        // We pass the dataset that is filtered ONLY by year.
-        // The function will handle extracting the relevant links for the selected program.
-        generateStrongestLinks(yearFilteredData, progSelect); 
+        updateStatsAndChart(filteredData);
+        generateStrongestLinks(filteredData); // NEW FUNCTION CALL
+        generateTables(filteredData);
     }
 
     function updateStatsAndChart(filteredData) {
@@ -1187,6 +1226,61 @@ Tarbell	2024
         Plotly.react('sankey-diagram', [dataTrace], layout, config);
     }
 
+    // --- NEW FUNCTION: STRONGEST LINKS ---
+    function generateStrongestLinks(data) {
+        const container = document.getElementById('strongest-links-container');
+        container.innerHTML = ''; // Clear previous
+
+        const pairMap = new Map();
+
+        data.forEach(row => {
+            const path = row.path;
+            // We need at least 2 items to form a link
+            if (path.length < 2) return;
+
+            for (let i = 0; i < path.length - 1; i++) {
+                const u = path[i];
+                const v = path[i+1];
+
+                // Skip self-referential loops (e.g. ERA -> ERA) if you want to exclude them
+                if (u === v) continue;
+
+                // Sort names alphabetically so "MATS -> ERA" and "ERA -> MATS" 
+                // produce the exact same key: "ERA|MATS"
+                const key = [u, v].sort().join('|');
+                
+                pairMap.set(key, (pairMap.get(key) || 0) + 1);
+            }
+        });
+
+        // Convert map to array and Sort by count (descending)
+        const sortedLinks = [...pairMap.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10); // Keep top 10
+
+        if (sortedLinks.length === 0) {
+            container.innerHTML = '<div class="empty-msg" style="grid-column: 1/-1; text-align:center;">No connections found in current selection.</div>';
+            return;
+        }
+
+        // Render Cards
+        sortedLinks.forEach(([key, count]) => {
+            const [prog1, prog2] = key.split('|');
+            
+            const card = document.createElement('div');
+            card.className = 'link-card';
+            card.innerHTML = `
+                <div class="link-names">
+                    ${prog1} <span class="link-arrow">⇄</span> ${prog2}
+                </div>
+                <div class="link-stat">
+                    <strong>${count}</strong> transitions
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
     // --- 5. LOGIC: TABLES GENERATION ---
     function generateTables(data) {
         const container = document.getElementById('tables-container');
@@ -1210,6 +1304,7 @@ Tarbell	2024
 
             progRows.forEach(row => {
                 const path = row.path;
+                // Find index of target in path. If multiple, we use the first occurrence
                 const targetIdx = path.indexOf(targetProg);
 
                 if (targetIdx !== -1) {
@@ -1227,25 +1322,30 @@ Tarbell	2024
                 }
             });
 
+            // Helper to sort and convert counts object to array
             const getSorted = (countsObj) => {
                 return Object.entries(countsObj)
-                    .sort((a, b) => b[1] - a[1]);
+                    .sort((a, b) => b[1] - a[1]); // Descending sort by count
             };
 
             const sortedBefore = getSorted(beforeCounts);
             const sortedAfter = getSorted(afterCounts);
 
+            // 3. Construct HTML for this program
             const sectionDiv = document.createElement('div');
             sectionDiv.className = 'program-block';
 
+            // Title
             const title = document.createElement('div');
             title.className = 'program-title';
             title.innerText = targetProg;
             sectionDiv.appendChild(title);
 
+            // Grid
             const grid = document.createElement('div');
             grid.className = 'tables-grid';
 
+            // Table Generator Helper
             const createTableHtml = (title, dataArr) => {
                 let html = `<div class="table-wrapper"><h3>${title}</h3>`;
                 if (dataArr.length === 0) {
@@ -1270,86 +1370,7 @@ Tarbell	2024
         });
     }
 
-    // --- 6. LOGIC: STRONGEST LINKS GENERATION ---
-    function generateStrongestLinks(data, selectedProgram) {
-        const container = document.getElementById('strongest-links-container');
-        if (!container) return; 
-        
-        const pairCounts = new Map();
-
-        // Count pairs using ALL data (subject to year filter)
-        data.forEach(row => {
-            const path = row.path;
-            for(let i = 0; i < path.length - 1; i++) {
-                const p1 = path[i];
-                const p2 = path[i+1];
-                
-                if (p1 === p2) continue; // Skip self-loops
-                
-                // Sort to make direction agnostic (A->B and B->A become A|B)
-                const key = [p1, p2].sort().join('|');
-                pairCounts.set(key, (pairCounts.get(key) || 0) + 1);
-            }
-        });
-
-        // Convert to array and sort by count descending
-        const sortedPairs = Array.from(pairCounts.entries())
-            .map(([key, count]) => {
-                const [f1, f2] = key.split('|');
-                return { f1, f2, count };
-            })
-            .sort((a, b) => b.count - a.count);
-
-        // Filter for specific program if one is selected
-        let displayPairs = sortedPairs;
-        if (selectedProgram !== 'All') {
-            displayPairs = sortedPairs.filter(p => p.f1 === selectedProgram || p.f2 === selectedProgram);
-        }
-
-        // Render
-        let html = `
-            <div class="program-block" style="text-align: center;">
-                <div class="program-title" style="border:none;">Top Shared Trajectories (Undirected)</div>
-                <p style="margin-bottom:20px; color:#666; font-size:0.9rem;">
-                    Shows the total number of movements between two fellowships. 
-                    <br>
-                    Includes all profiles matching the Year filter (not limited by Target Fellowship selection).
-                </p>
-                <div style="max-width: 600px; margin: 0 auto;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="text-align:right; width:45%;">Fellowship A</th>
-                                <th style="width:10%; text-align:center;">↔</th>
-                                <th style="text-align:left; width:45%;">Fellowship B</th>
-                                <th class="count-col">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-        `;
-
-        const topN = displayPairs.slice(0, 15); // Show top 15
-        
-        if (topN.length === 0) {
-            html += `<tr><td colspan="4" style="text-align:center; padding:20px;">No links found for current selection.</td></tr>`;
-        } else {
-            topN.forEach(item => {
-                html += `
-                    <tr>
-                        <td style="text-align:right; font-weight:500;">${item.f1}</td>
-                        <td style="text-align:center; color:#ccc;">↔</td>
-                        <td style="text-align:left; font-weight:500;">${item.f2}</td>
-                        <td class="count-col" style="font-size:1.1rem;">${item.count}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        html += `</tbody></table></div></div>`;
-        container.innerHTML = html;
-    }
-
-    // --- 7. INIT ---
+    // --- 6. INIT ---
     document.addEventListener("DOMContentLoaded", () => {
         parsedRows = parseData(); 
         populateFilters(parsedRows); 
