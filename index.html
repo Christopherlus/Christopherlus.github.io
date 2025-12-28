@@ -1045,6 +1045,7 @@ Tarbell	2024
         let totalProcessed = 0;
         let hasPrior = 0;
         let hasSubsequent = 0;
+        let hasOther = 0; // <--- NEW VARIABLE
 
         filteredData.forEach(row => {
             totalProcessed++;
@@ -1057,6 +1058,13 @@ Tarbell	2024
                 if (idx > 0) hasPrior++;
                 if (idx < path.length - 1) hasSubsequent++;
             }
+
+            // --- NEW LOGIC START ---
+            // Check if path contains any program that is NOT the target program
+            if (path.some(prog => prog !== target)) {
+                hasOther++;
+            }
+            // --- NEW LOGIC END ---
 
             // Links
             const fullPath = ['Start', ...path, 'End'];
@@ -1072,11 +1080,13 @@ Tarbell	2024
         if (totalProcessed > 0) {
             const priorPct = ((hasPrior / totalProcessed) * 100).toFixed(1);
             const subPct = ((hasSubsequent / totalProcessed) * 100).toFixed(1);
+            const otherPct = ((hasOther / totalProcessed) * 100).toFixed(1); // <--- NEW CALCULATION
             
             const statsText = 
 `Total Profiles Analyzed: ${totalProcessed}
 • Experience BEFORE target fellowship: ${priorPct}% (${hasPrior})
-• Experience AFTER target fellowship:  ${subPct}% (${hasSubsequent})`;
+• Experience AFTER target fellowship:  ${subPct}% (${hasSubsequent})
+• Total with other fellowship experience: ${otherPct}% (${hasOther})`; // <--- NEW LINE
             
             document.getElementById('stats-output').innerText = statsText;
         } else {
