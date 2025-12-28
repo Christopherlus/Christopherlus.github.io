@@ -153,6 +153,7 @@
         .tables-section {
             border-top: 2px solid var(--border-color);
             padding-top: 30px;
+            margin-bottom: 40px;
         }
         
         .section-header {
@@ -296,8 +297,12 @@
     
     <div class="tables-section">
         <h2 class="section-header">Flow Analysis Tables</h2>
-        <div id="tables-container">
-            </div>
+        <div id="tables-container"></div>
+    </div>
+
+    <div class="tables-section">
+        <h2 class="section-header">Strongest Cross-Program Links</h2>
+        <div id="strongest-links-container"></div>
     </div>
 
     <div class="footer">
@@ -1057,6 +1062,7 @@ Tarbell	2024
         // Update visuals
         updateStatsAndChart(filteredData);
         generateTables(filteredData);
+        generateStrongestLinks(filteredData); // Trigger new analysis
     }
 
     function updateStatsAndChart(filteredData) {
@@ -1159,7 +1165,6 @@ Tarbell	2024
                 font: { family: 'Roboto', size: 18, color: '#2c3e50' }
             },
             font: { family: 'Roboto', size: 12 },
-            // FIXED: Explicit height prevents overlap during redraw
             height: 700, 
             autosize: true,
             margin: { l: 20, r: 20, t: 40, b: 20 },
@@ -1198,7 +1203,6 @@ Tarbell	2024
 
             progRows.forEach(row => {
                 const path = row.path;
-                // Find index of target in path. If multiple, we use the first occurrence
                 const targetIdx = path.indexOf(targetProg);
 
                 if (targetIdx !== -1) {
@@ -1216,30 +1220,25 @@ Tarbell	2024
                 }
             });
 
-            // Helper to sort and convert counts object to array
             const getSorted = (countsObj) => {
                 return Object.entries(countsObj)
-                    .sort((a, b) => b[1] - a[1]); // Descending sort by count
+                    .sort((a, b) => b[1] - a[1]);
             };
 
             const sortedBefore = getSorted(beforeCounts);
             const sortedAfter = getSorted(afterCounts);
 
-            // 3. Construct HTML for this program
             const sectionDiv = document.createElement('div');
             sectionDiv.className = 'program-block';
 
-            // Title
             const title = document.createElement('div');
             title.className = 'program-title';
             title.innerText = targetProg;
             sectionDiv.appendChild(title);
 
-            // Grid
             const grid = document.createElement('div');
             grid.className = 'tables-grid';
 
-            // Table Generator Helper
             const createTableHtml = (title, dataArr) => {
                 let html = `<div class="table-wrapper"><h3>${title}</h3>`;
                 if (dataArr.length === 0) {
@@ -1264,7 +1263,77 @@ Tarbell	2024
         });
     }
 
-    // --- 6. INIT ---
+    // --- 6. LOGIC: STRONGEST LINKS GENERATION ---
+    function generateStrongestLinks(data) {
+        const container = document.getElementById('strongest-links-container');
+        if (!container) return; 
+        
+        const pairCounts = new Map();
+
+        data.forEach(row => {
+            const path = row.path;
+            for(let i = 0; i < path.length - 1; i++) {
+                const p1 = path[i];
+                const p2 = path[i+1];
+                
+                if (p1 === p2) continue; // Skip self-loops
+                
+                // Sort to make direction agnostic (A->B and B->A become A|B)
+                const key = [p1, p2].sort().join('|');
+                pairCounts.set(key, (pairCounts.get(key) || 0) + 1);
+            }
+        });
+
+        // Convert to array and sort by count descending
+        const sortedPairs = Array.from(pairCounts.entries())
+            .map(([key, count]) => {
+                const [f1, f2] = key.split('|');
+                return { f1, f2, count };
+            })
+            .sort((a, b) => b.count - a.count);
+
+        // Render
+        let html = `
+            <div class="program-block" style="text-align: center;">
+                <div class="program-title" style="border:none;">Top Shared Trajectories (Undirected)</div>
+                <p style="margin-bottom:20px; color:#666; font-size:0.9rem;">
+                    Shows the total number of movements between two fellowships, regardless of direction (A → B plus B → A).
+                </p>
+                <div style="max-width: 600px; margin: 0 auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align:right; width:45%;">Fellowship A</th>
+                                <th style="width:10%; text-align:center;">↔</th>
+                                <th style="text-align:left; width:45%;">Fellowship B</th>
+                                <th class="count-col">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        const topN = sortedPairs.slice(0, 15); // Show top 15
+        
+        if (topN.length === 0) {
+            html += `<tr><td colspan="4" style="text-align:center; padding:20px;">No links found for current selection.</td></tr>`;
+        } else {
+            topN.forEach(item => {
+                html += `
+                    <tr>
+                        <td style="text-align:right; font-weight:500;">${item.f1}</td>
+                        <td style="text-align:center; color:#ccc;">↔</td>
+                        <td style="text-align:left; font-weight:500;">${item.f2}</td>
+                        <td class="count-col" style="font-size:1.1rem;">${item.count}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        html += `</tbody></table></div></div>`;
+        container.innerHTML = html;
+    }
+
+    // --- 7. INIT ---
     document.addEventListener("DOMContentLoaded", () => {
         parsedRows = parseData(); 
         populateFilters(parsedRows); 
