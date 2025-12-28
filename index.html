@@ -138,15 +138,6 @@
             white-space: pre-wrap;
         }
         
-
-        <div id="stats-output" class="stats-box">Initializing analytics...</div>
-        
-        <div class="chart-note">
-            <strong>Note on "Loops":</strong> Many paths look like they loop backwards. This is because the paths between fellowships are often bidirectional (e.g., there are some people who do MATS before ERA and some who do ERA before MATS).
-        </div>
-        
-        <div id="sankey-diagram"></div>
-
         /* CHART AREA */
         #sankey-diagram {
             width: 100%;
@@ -154,6 +145,8 @@
             border-radius: 8px;
             overflow: hidden;
             margin-bottom: 40px;
+            /* Added min-height to prevent collapse during redraw */
+            min-height: 700px;
         }
 
         /* --- NEW TABLE STYLES --- */
@@ -262,6 +255,7 @@
             }
             #sankey-diagram {
                 height: 500px;
+                min-height: 500px;
             }
             .tables-grid {
                 grid-template-columns: 1fr; /* Stack tables on mobile */
@@ -293,6 +287,10 @@
     </div>
 
     <div id="stats-output" class="stats-box">Initializing analytics...</div>
+    
+    <div class="chart-note">
+        <strong>Note on "Loops":</strong> Many paths look like they loop backwards. This is because the paths between fellowships are often bidirectional (e.g., there are some people who do MATS before ERA and some who do ERA before MATS).
+    </div>
 
     <div id="sankey-diagram"></div>
     
@@ -1067,7 +1065,7 @@ Tarbell	2024
         let totalProcessed = 0;
         let hasPrior = 0;
         let hasSubsequent = 0;
-        let hasOther = 0; // <--- NEW VARIABLE
+        let hasOther = 0; 
 
         filteredData.forEach(row => {
             totalProcessed++;
@@ -1081,12 +1079,10 @@ Tarbell	2024
                 if (idx < path.length - 1) hasSubsequent++;
             }
 
-            // --- NEW LOGIC START ---
             // Check if path contains any program that is NOT the target program
             if (path.some(prog => prog !== target)) {
                 hasOther++;
             }
-            // --- NEW LOGIC END ---
 
             // Links
             const fullPath = ['Start', ...path, 'End'];
@@ -1102,13 +1098,13 @@ Tarbell	2024
         if (totalProcessed > 0) {
             const priorPct = ((hasPrior / totalProcessed) * 100).toFixed(1);
             const subPct = ((hasSubsequent / totalProcessed) * 100).toFixed(1);
-            const otherPct = ((hasOther / totalProcessed) * 100).toFixed(1); // <--- NEW CALCULATION
+            const otherPct = ((hasOther / totalProcessed) * 100).toFixed(1);
             
             const statsText = 
 `Total Profiles Analyzed: ${totalProcessed}
 • Experience BEFORE target fellowship: ${priorPct}% (${hasPrior})
 • Experience AFTER target fellowship:  ${subPct}% (${hasSubsequent})
-• Total with other fellowship experience: ${otherPct}% (${hasOther})`; // <--- NEW LINE
+• Total with other fellowship experience: ${otherPct}% (${hasOther})`;
             
             document.getElementById('stats-output').innerText = statsText;
         } else {
@@ -1163,6 +1159,8 @@ Tarbell	2024
                 font: { family: 'Roboto', size: 18, color: '#2c3e50' }
             },
             font: { family: 'Roboto', size: 12 },
+            // FIXED: Explicit height prevents overlap during redraw
+            height: 700, 
             autosize: true,
             margin: { l: 20, r: 20, t: 40, b: 20 },
             paper_bgcolor: 'rgba(0,0,0,0)',
@@ -1201,7 +1199,6 @@ Tarbell	2024
             progRows.forEach(row => {
                 const path = row.path;
                 // Find index of target in path. If multiple, we use the first occurrence
-                // (or you could adapt logic to be stricter)
                 const targetIdx = path.indexOf(targetProg);
 
                 if (targetIdx !== -1) {
