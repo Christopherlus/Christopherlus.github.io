@@ -1052,17 +1052,24 @@ Tarbell	2024
         const yearSelect = document.getElementById('yearFilter').value;
         const progSelect = document.getElementById('programFilter').value;
 
-        // A. Filter Data
-        const filteredData = parsedRows.filter(row => {
-            const matchesYear = (yearSelect === 'All') || (row.year === yearSelect);
-            const matchesProg = (progSelect === 'All') || (row.targetProgram === progSelect);
-            return matchesYear && matchesProg;
+        // A. Filter Data for "Strict" Views (Chart, Flow Tables)
+        // This preserves the behavior of "Show me people whose Target was X"
+        const yearFilteredData = parsedRows.filter(row => {
+            return (yearSelect === 'All') || (row.year === yearSelect);
+        });
+
+        const fullyFilteredData = yearFilteredData.filter(row => {
+            return (progSelect === 'All') || (row.targetProgram === progSelect);
         });
 
         // Update visuals
-        updateStatsAndChart(filteredData);
-        generateTables(filteredData);
-        generateStrongestLinks(filteredData); // Trigger new analysis
+        updateStatsAndChart(fullyFilteredData);
+        generateTables(fullyFilteredData);
+
+        // B. Update Strongest Links (More Inclusive)
+        // We pass the dataset that is filtered ONLY by year.
+        // The function will handle extracting the relevant links for the selected program.
+        generateStrongestLinks(yearFilteredData, progSelect); 
     }
 
     function updateStatsAndChart(filteredData) {
@@ -1264,12 +1271,13 @@ Tarbell	2024
     }
 
     // --- 6. LOGIC: STRONGEST LINKS GENERATION ---
-    function generateStrongestLinks(data) {
+    function generateStrongestLinks(data, selectedProgram) {
         const container = document.getElementById('strongest-links-container');
         if (!container) return; 
         
         const pairCounts = new Map();
 
+        // Count pairs using ALL data (subject to year filter)
         data.forEach(row => {
             const path = row.path;
             for(let i = 0; i < path.length - 1; i++) {
@@ -1292,12 +1300,20 @@ Tarbell	2024
             })
             .sort((a, b) => b.count - a.count);
 
+        // Filter for specific program if one is selected
+        let displayPairs = sortedPairs;
+        if (selectedProgram !== 'All') {
+            displayPairs = sortedPairs.filter(p => p.f1 === selectedProgram || p.f2 === selectedProgram);
+        }
+
         // Render
         let html = `
             <div class="program-block" style="text-align: center;">
                 <div class="program-title" style="border:none;">Top Shared Trajectories (Undirected)</div>
                 <p style="margin-bottom:20px; color:#666; font-size:0.9rem;">
-                    Shows the total number of movements between two fellowships, regardless of direction (A → B plus B → A).
+                    Shows the total number of movements between two fellowships. 
+                    <br>
+                    Includes all profiles matching the Year filter (not limited by Target Fellowship selection).
                 </p>
                 <div style="max-width: 600px; margin: 0 auto;">
                     <table>
@@ -1312,7 +1328,7 @@ Tarbell	2024
                         <tbody>
         `;
 
-        const topN = sortedPairs.slice(0, 15); // Show top 15
+        const topN = displayPairs.slice(0, 15); // Show top 15
         
         if (topN.length === 0) {
             html += `<tr><td colspan="4" style="text-align:center; padding:20px;">No links found for current selection.</td></tr>`;
