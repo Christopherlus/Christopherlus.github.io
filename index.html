@@ -111,6 +111,19 @@
             box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
 
+        /* EXPLAINER NOTE */
+        .chart-note {
+            font-size: 0.9rem;
+            color: #636e72;
+            background-color: #fff;
+            border: 1px solid #dfe6e9;
+            border-left: 4px solid #b2bec3;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+
         /* STATS BOX */
         .stats-box {
             background: linear-gradient(135deg, #eef2f3 0%, #ffffff 100%);
@@ -124,6 +137,15 @@
             box-shadow: var(--shadow);
             white-space: pre-wrap;
         }
+        
+
+        <div id="stats-output" class="stats-box">Initializing analytics...</div>
+        
+        <div class="chart-note">
+            <strong>Note on "Loops":</strong> Many paths look like they loop backwards. This is because the paths between fellowships are often bidirectional (e.g., there are some people who do MATS before ERA and some who do ERA before MATS).
+        </div>
+        
+        <div id="sankey-diagram"></div>
 
         /* CHART AREA */
         #sankey-diagram {
